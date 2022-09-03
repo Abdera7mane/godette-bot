@@ -49,7 +49,7 @@ func _run() -> void:
 	
 	print("Register Godette commands" )
 	
-	var rest := DiscordRESTAdapter.new(token, DiscordEntityManager.new())
+	var rest := DiscordRESTAdapter.new(token)
 	
 	var commands: Array = yield(
 		rest.application.bulk_overwrite_global_application_commands(
