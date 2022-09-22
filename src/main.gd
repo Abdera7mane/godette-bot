@@ -1,4 +1,4 @@
-extends SceneTree
+class_name BotMain extends SceneTree
 
 const Bot: Script = preload("res://src/bot.gd")
 
