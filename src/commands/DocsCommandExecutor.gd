@@ -27,10 +27,10 @@ var godot_3: GodotAPIReference
 var godot_4: GodotAPIReference
 
 func _init() -> void:
-	load_godot_3_dcos()
-#	load_godot_4_dcos()
+	load_godot_3_docs()
+#	load_godot_4_docs()
 
-func load_godot_3_dcos() -> void:
+func load_godot_3_docs() -> void:
 	godot_3 = GodotAPIReference.new()
 	yield(godot_3.load("res://assets/documentation/godot-3.x"), "completed")
 	
@@ -55,7 +55,7 @@ func load_godot_3_dcos() -> void:
 	godot_3.classes["vectors3"] = godot_3.classes["poolvector3array"]
 	godot_3.classes["node3d"] = godot_3.classes["spatial"]
 	
-func load_godot_4_dcos() -> void:
+func load_godot_4_docs() -> void:
 	yield(godot_3.load("res://assets/documentation/godot-master"), "completed")
 
 func get_class_icon(clazz: String) -> String:
