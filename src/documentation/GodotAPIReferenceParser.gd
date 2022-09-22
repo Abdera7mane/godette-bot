@@ -294,6 +294,8 @@ func handle_node_name(current_node: String, parent_node: String, parser: XMLPars
 	return error
 
 func load(path: String) -> int:
+	yield(Engine.get_main_loop(), "idle_frame")
+	
 	var directory: Directory = Directory.new()
 	
 	var error: int = directory.open(path)
