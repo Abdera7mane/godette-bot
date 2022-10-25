@@ -5,6 +5,7 @@ const APPLICATION_ID: int = 948797584305164359
 
 func create_docs_command() -> ApplicationCommandBuilder:
 	return ApplicationCommandBuilder.new("docs")\
+		.as_chat_input()\
 		.with_description("Godot documentation")\
 		.add_option(
 			ApplicationCommandStringOption.new("class_name")\
@@ -28,6 +29,7 @@ func create_docs_command() -> ApplicationCommandBuilder:
 
 func create_execute_command() -> ApplicationCommandBuilder:
 	return ApplicationCommandBuilder.new("execute")\
+		.as_chat_input()\
 		.with_description("Execute a GDScript expression").add_option(
 			ApplicationCommandStringOption.new("expression")\
 			.with_description("The expression to execute")\
@@ -36,6 +38,7 @@ func create_execute_command() -> ApplicationCommandBuilder:
 
 func create_ping_command() -> ApplicationCommandBuilder:
 	return ApplicationCommandBuilder.new("ping")\
+		.as_chat_input()\
 		.with_description("Display bot's ping")
 
 func _run() -> void:

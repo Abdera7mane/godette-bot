@@ -6,15 +6,13 @@ var singletons: Dictionary = {
 
 var expression: Expression = Expression.new()
 
-func interact(interaction: DiscordInteraction) -> void:
-	var expression_string: String = interaction.get_string_option_value(0)
+func _on_slash_command(command: DiscordSlashCommand) -> void:
+	var expression_string: String = command.get_string_option("expression")
 	if expression.parse(expression_string, singletons.keys()) != OK:
 		var reply: String = "```diff\n"
 		reply += "-" + expression.get_error_text()
 		reply += "\n```"
-		interaction.reply(
-			DiscordInteractionMessage.new().set_content(reply)
-		)
+		command.create_reply(reply).submit()
 		return
 	
 	var formatting = ""
@@ -27,10 +25,8 @@ func interact(interaction: DiscordInteraction) -> void:
 		formatting = "diff"
 		result = "! Empty"
 	
-	interaction.reply(
-		DiscordInteractionMessage.new().set_content(
-			"```" + formatting + "\n"
-			+ result
-			+ "```"
-		)
-	)
+	command.create_reply(
+		"```" + formatting + "\n"
+		+ result
+		+ "```"
+	).submit()

@@ -56,7 +56,7 @@ func load_godot_3_docs() -> void:
 	godot_3.classes["node3d"] = godot_3.classes["spatial"]
 	
 func load_godot_4_docs() -> void:
-	yield(godot_3.load("res://assets/documentation/godot-master"), "completed")
+	yield(godot_4.load("res://assets/documentation/godot-master"), "completed")
 
 func get_class_icon(clazz: String) -> String:
 	return ICON_URL.format({name = clazz.to_lower()})
@@ -84,8 +84,9 @@ func generate_class_embed(clazz: String, anchor: String = "") -> MessageEmbedBui
 	var icon: String = get_class_icon(clazz)
 	return generate_embed(clazz, url, icon)
 
-func display_class_documentation(clazz: String, api: GodotAPIReference) -> DiscordInteractionMessage:
-	var message := DiscordInteractionMessage.new()
+func display_class_documentation(
+	clazz: String, api: GodotAPIReference, action: MessageAction
+) -> void:
 	
 	var class_reference: ClassAPIReference = api.get_class_reference(clazz)
 	var clazz_name: String = class_reference.name
@@ -115,15 +116,15 @@ func display_class_documentation(clazz: String, api: GodotAPIReference) -> Disco
 				tutorials.append("[%s](%s)" % [tutorial.title, tutorial.link])
 		embed.add_field("Tutorials", "**" + tutorials.join(", ") + "**")
 	
-	return message.add_embed(embed)
+	action.add_embed(embed)
 
-func display_methods_documentation(clazz: String, api: GodotAPIReference) -> DiscordInteractionMessage:
-	var message := DiscordInteractionMessage.new()
-	
+func display_methods_documentation(
+	clazz: String, api: GodotAPIReference, action: MessageAction
+) -> void:
 	var class_reference: ClassAPIReference = api.get_class_reference(clazz)
 	var clazz_name: String = class_reference.name
 	if class_reference.methods.size() == 0:
-		message.set_content("**No methods in base `%s`**" % clazz_name)
+		action.set_content("**No methods in base `%s`**" % clazz_name)
 	else:
 		var methods: Array = class_reference.methods.values()
 		
@@ -133,40 +134,37 @@ func display_methods_documentation(clazz: String, api: GodotAPIReference) -> Dis
 			# Arduino is the closest to highlight most of the method syntax
 			description += str('```ino\n', method, '```')
 		
-		message.add_embed(
+		action.add_embed(
 			generate_class_embed(clazz_name, "#method-descriptions")\
 			.set_title(clazz_name + " methods")\
 			.set_description(description)
 		)
-		
-	return message
 
-func display_method_documentation(clazz: String, method: String, api: GodotAPIReference) -> DiscordInteractionMessage:
-	var message := DiscordInteractionMessage.new()
-	
+func display_method_documentation(
+	clazz: String, method: String, api: GodotAPIReference,
+	action: MessageAction
+) -> void:
 	var class_reference: ClassAPIReference = api.get_class_reference(clazz)
 	var clazz_name: String = class_reference.name
 	
 	if class_reference.contains_method(method):
 		var method_ref: MethodAPIReference = class_reference.get_method(method)
-		message.add_embed(
+		action.add_embed(
 			generate_class_embed(clazz_name, "#method-descriptions")\
 			.set_title("%s.%s()" % [clazz_name, method_ref.name])\
 			.set_description(method_ref.description)\
 			.add_field("Declaration", str('```ino\n', method_ref, '```'))
 		)
 	else:
-		message.set_content("**`%s` method not found in base `%s`**" % [method, clazz_name])
-		
-	return message
+		action.set_content("**`%s` method not found in base `%s`**" % [method, clazz_name])
 
-func display_properties_documentation(clazz: String, api: GodotAPIReference) -> DiscordInteractionMessage:
-	var message := DiscordInteractionMessage.new()
-	
+func display_properties_documentation(
+	clazz: String, api: GodotAPIReference, action: MessageAction
+) -> void:
 	var class_reference: ClassAPIReference = api.get_class_reference(clazz)
 	var clazz_name: String = class_reference.name
 	if class_reference.members.size() == 0:
-		message.set_content("**No properties in base `%s`**" % clazz_name)
+		action.set_content("**No properties in base `%s`**" % clazz_name)
 	else:
 		var members: Array = class_reference.members.values()
 		
@@ -175,41 +173,39 @@ func display_properties_documentation(clazz: String, api: GodotAPIReference) -> 
 			var member: MemberAPIReference = members[i]
 			description += str('```ino\n', member, '```')
 		
-		message.add_embed(
+		action.add_embed(
 			generate_class_embed(clazz_name, "#property-descriptions")\
 			.set_title(clazz_name + " properties")\
 			.set_description(description)
 		)
-		
-	return message
-	
 
-func display_property_documentation(clazz: String, property: String, api: GodotAPIReference) -> DiscordInteractionMessage:
-	var message := DiscordInteractionMessage.new()
-	
+func display_property_documentation(
+	clazz: String, property: String, api: GodotAPIReference,
+	action: MessageAction
+) -> void:
 	var class_reference: ClassAPIReference = api.get_class_reference(clazz)
 	var clazz_name: String = class_reference.name
 	
 	if class_reference.contains_member(property):
 		var property_ref: MemberAPIReference = class_reference.get_member(property)
-		message.add_embed(
+		action.add_embed(
 			generate_class_embed(clazz_name, "#property-descriptions")\
 			.set_title("%s.%s" % [clazz_name, property_ref.name])\
 			.set_description(property_ref.description)\
 			.add_field("Declaration", str('```ino\n', property_ref, '```'))
 		)
 	else:
-		message.set_content("**`%s` property not found in base `%s`**" % [property, clazz_name])
-		
-	return message
+		action.set_content("**`%s` property not found in base `%s`**" % [
+			property, clazz_name
+		])
 
-func display_signals_documentation(clazz: String, api: GodotAPIReference) -> DiscordInteractionMessage:
-	var message := DiscordInteractionMessage.new()
-	
+func display_signals_documentation(
+	clazz: String, api: GodotAPIReference, action: MessageAction
+) -> void:
 	var class_reference: ClassAPIReference = api.get_class_reference(clazz)
 	var clazz_name: String = class_reference.name
 	if class_reference.signals.size() == 0:
-		message.set_content("**No signals in base `%s`**" % clazz_name)
+		action.set_content("**No signals in base `%s`**" % clazz_name)
 	else:
 		var signals: Array = class_reference.signals.values()
 		
@@ -219,41 +215,38 @@ func display_signals_documentation(clazz: String, api: GodotAPIReference) -> Dis
 			# Yeah whatever, haskell time
 			description += str('```hs\n', signal_ref, '```')
 		
-		message.add_embed(
+		action.add_embed(
 			generate_class_embed(clazz_name, "#signals")\
 			.set_title(clazz_name + " singals")\
 			.set_description(description)
 		)
-		
-	return message
 
-func display_signal_documentation(clazz: String, signal_name: String, api: GodotAPIReference) -> DiscordInteractionMessage:
-	var message := DiscordInteractionMessage.new()
-	
+func display_signal_documentation(
+	clazz: String, signal_name: String, api: GodotAPIReference,
+	action: MessageAction
+) -> void:
 	var class_reference: ClassAPIReference = api.get_class_reference(clazz)
 	var clazz_name: String = class_reference.name
 	
 	if class_reference.contains_signal(signal_name):
 		var signal_ref: SignalAPIReference = class_reference.get_signal(signal_name)
-		message.add_embed(
+		action.add_embed(
 			generate_class_embed(clazz_name, "#signals")\
 			.set_title("%s [signal] %s" % [clazz_name, signal_ref.name])\
 			.set_description(signal_ref.description)\
 			.add_field("Declaration", str('```hs\n', signal_ref, '```'))
 		)
 	else:
-		message.set_content("**`%s` signal not found in base `%s`**" % [signal_name, clazz_name])
-		
-	return message
+		action.set_content("**`%s` signal not found in base `%s`**" % [signal_name, clazz_name])
 
-func display_constants_documentation(clazz: String, api: GodotAPIReference) -> DiscordInteractionMessage:
-	var message := DiscordInteractionMessage.new()
-	
+func display_constants_documentation(
+	clazz: String, api: GodotAPIReference, action: MessageAction
+) -> void:
 	var class_reference: ClassAPIReference = api.get_class_reference(clazz)
 	var clazz_name: String = class_reference.name
 	
 	if class_reference.constants.size() == 0:
-		message.set_content("**No constants in base `%s`**" % clazz_name)
+		action.set_content("**No constants in base `%s`**" % clazz_name)
 	else:
 		var constants: Array = class_reference.constants.values()
 		
@@ -262,40 +255,38 @@ func display_constants_documentation(clazz: String, api: GodotAPIReference) -> D
 			var constant: ConstantAPIReference = constants[i]
 			description += str('```ino\n', constant, '```')
 		
-		message.add_embed(
+		action.add_embed(
 			generate_class_embed(clazz_name, "#constants")\
 			.set_title(clazz_name + " constants")\
 			.set_description(description)
 		)
-		
-	return message
 
-func display_constant_documentation(clazz: String, constant: String, api: GodotAPIReference) -> DiscordInteractionMessage:
-	var message := DiscordInteractionMessage.new()
-	
+func display_constant_documentation(
+	clazz: String, constant: String, api: GodotAPIReference,
+	action: MessageAction
+) -> void:
 	var class_reference: ClassAPIReference = api.get_class_reference(clazz)
 	var clazz_name: String = class_reference.name
 	
 	if class_reference.contains_constant(constant):
 		var const_ref: ConstantAPIReference = class_reference.get_constant(constant)
-		message.add_embed(
+		action.add_embed(
 			generate_class_embed(clazz_name, "#constants")\
 			.set_title("%s.%s" % [clazz_name, const_ref.name])\
 			.set_description(const_ref.description)\
 			.add_field("Declaration", str('```hs\n', const_ref, '```'))
 		)
 	else:
-		message.set_content("**`%s` constant not found in base `%s`**" % [constant, clazz_name])
-		
-	return message
+		action.set_content("**`%s` constant not found in base `%s`**" % [constant, clazz_name])
+		action
 
-func display_enums_documentation(clazz: String, api: GodotAPIReference) -> DiscordInteractionMessage:
-	var message := DiscordInteractionMessage.new()
-	
+func display_enums_documentation(
+	clazz: String, api: GodotAPIReference, action: MessageAction
+) -> void:
 	var class_reference: ClassAPIReference = api.get_class_reference(clazz)
 	var clazz_name: String = class_reference.name
 	if class_reference.enums.size() == 0:
-		message.set_content("**No enums in base `%s`**" % clazz_name)
+		action.set_content("**No enums in base `%s`**" % clazz_name)
 	else:
 		var enums: Array = class_reference.enums.values()
 		
@@ -304,17 +295,16 @@ func display_enums_documentation(clazz: String, api: GodotAPIReference) -> Disco
 			var enum_ref: EnumAPIReference = enums[i]
 			description += str('```swift\n', enum_ref.name, '```')
 		
-		message.add_embed(
+		action.add_embed(
 			generate_class_embed(clazz_name, "#enumerations")\
 			.set_title(clazz_name + " enums")\
 			.set_description(description)
 		)
-		
-	return message
 
-func display_enum_documentation(clazz: String, enum_name: String, api: GodotAPIReference) -> DiscordInteractionMessage:
-	var message := DiscordInteractionMessage.new()
-	
+func display_enum_documentation(
+	clazz: String, enum_name: String, api: GodotAPIReference,
+	action: MessageAction
+) -> void:
 	var class_reference: ClassAPIReference = api.get_class_reference(clazz)
 	var clazz_name: String = class_reference.name
 	
@@ -327,62 +317,60 @@ func display_enum_documentation(clazz: String, enum_name: String, api: GodotAPIR
 			var entry: EnumAPIReference.Entry = entries[i]
 			description += str(entry, "\n")
 		description += "```"
-		message.add_embed(
+		action.add_embed(
 			generate_class_embed(clazz_name, "#enumerations")\
 			.set_title("%s.%s" % [clazz_name, enum_ref.name])\
 			.set_description(description)\
 		)
 	else:
-		message.set_content("**`%s` enum not found in base `%s`**" % [enum_name, clazz_name])
-		
-	return message
+		action.set_content("**`%s` enum not found in base `%s`**" % [enum_name, clazz_name])
 
-func interact(interaction: DiscordInteraction) -> void:
-	var clazz: String = interaction.get_named_string_option_value("class_name")
-	var attribute: String = interaction.get_named_string_option_value("attribute")
-	var attribute_name: String = interaction.get_named_string_option_value("attribute_name")
-	var for_godot_4: bool = interaction.get_named_boolean_option_value("godot_4")
+func _on_slash_command(command: DiscordSlashCommand) -> void:
+	var clazz: String = command.get_string_option("class_name")
+	var attribute: String = command.get_string_option("attribute")
+	var attribute_name: String = command.get_string_option("attribute_name")
+	var for_godot_4: bool = command.get_boolean_option("godot_4")
 	
 #	var api_reference: GodotAPIReference = godot_4 if for_godot_4 else godot_3
 	var api_reference: GodotAPIReference = godot_3
 	
-	var message: DiscordInteractionMessage
+	var action: MessageAction = command.create_reply()
 	
 	if attribute.empty() and not attribute_name.empty():
-		message = DiscordInteractionMessage.new()\
-			.set_content("**`attribute` option must be set when `attribute_name` is provided**")
+		action.set_content(
+			"**`attribute` option must be set when `attribute_name` is provided**"
+		)
 	
 	elif api_reference.has_class(clazz):
 		match attribute:
 			"method":
 				if attribute_name.empty():
-					message = display_methods_documentation(clazz, api_reference)
+					display_methods_documentation(clazz, api_reference, action)
 				else:
-					message = display_method_documentation(clazz, attribute_name, api_reference)
+					display_method_documentation(clazz, attribute_name, api_reference, action)
 			"property":
 				if attribute_name.empty():
-					message = display_properties_documentation(clazz, api_reference)
+					display_properties_documentation(clazz, api_reference, action)
 				else:
-					message = display_property_documentation(clazz, attribute_name, api_reference)
+					display_property_documentation(clazz, attribute_name, api_reference, action)
 			"signal":
 				if attribute_name.empty():
-					message = display_signals_documentation(clazz, api_reference)
+					display_signals_documentation(clazz, api_reference, action)
 				else:
-					message = display_signal_documentation(clazz, attribute_name, api_reference)
+					display_signal_documentation(clazz, attribute_name, api_reference, action)
 			"constant":
 				if attribute_name.empty():
-					message = display_constants_documentation(clazz, api_reference)
+					display_constants_documentation(clazz, api_reference, action)
 				else:
-					message = display_constant_documentation(clazz, attribute_name, api_reference)
+					display_constant_documentation(clazz, attribute_name, api_reference, action)
 			"enum":
 				if attribute_name.empty():
-					message = display_enums_documentation(clazz, api_reference)
+					display_enums_documentation(clazz, api_reference, action)
 				else:
-					message = display_enum_documentation(clazz, attribute_name, api_reference)
+					display_enum_documentation(clazz, attribute_name, api_reference, action)
 			_:
-				message = display_class_documentation(clazz, api_reference)
+				display_class_documentation(clazz, api_reference, action)
 	else:
-		message = DiscordInteractionMessage.new()\
-			.set_content("**Class name `%s` not found**" % clazz)
+		action.set_content("**Class name `%s` not found**" % clazz)
 	
-	interaction.reply(message)
+	action.submit()
