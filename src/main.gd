@@ -11,6 +11,7 @@ func _initialize() -> void:
 	
 	auto_accept_quit = false
 	
+	# warning-ignore:return_value_discarded
 	bot.client.connect("disconnected", self, "notification", [NOTIFICATION_WM_QUIT_REQUEST])
 	root.add_child(bot)
 

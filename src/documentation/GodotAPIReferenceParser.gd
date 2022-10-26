@@ -1,5 +1,7 @@
 class_name GodotAPIReferenceParser
 
+# warning-ignore-all:return_value_discarded
+
 const DOCS_URL: String = "https://docs.godotengine.org/en/%s"
 
 const PROPERTY_ANCHOR: String = "#class-%s-property-%s"
@@ -324,7 +326,7 @@ func load_file(path: String) -> int:
 	
 	_current_class = ClassAPIReference.new()
 	
-	var stack: PoolStringArray
+	var stack: PoolStringArray = []
 	var current_node: String
 	var parent_node: String
 	while error == OK and parser.read() == OK:

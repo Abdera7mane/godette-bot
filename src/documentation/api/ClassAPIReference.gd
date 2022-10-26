@@ -1,5 +1,7 @@
 class_name ClassAPIReference
 
+# warning-ignore-all:shadowed_variable
+
 var name: String
 var inherits: String
 var brief_description: String
