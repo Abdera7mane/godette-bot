@@ -23,6 +23,10 @@ func create_docs_command() -> ApplicationCommandBuilder:
 			ApplicationCommandStringOption.new("attribute_name")\
 			.with_description("Attribute name").is_required(false)
 		).add_option(
+			ApplicationCommandIntegerOption.new("page")\
+			.with_description("Relavent page to the attribute documentation")\
+			.is_required(false)
+		).add_option(
 			ApplicationCommandBoolOption.new("godot_4")\
 			.with_description("Godot 4 docs").is_required(false)
 		)
