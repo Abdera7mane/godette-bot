@@ -8,7 +8,7 @@ var client: DiscordClient
 func _init() -> void:
 	parse_cmdline_args()
 	
-	client = DiscordClient.new(get_token(), GatewayIntents.ALL)
+	client = DiscordClient.new(get_token(), 0)
 	client.connect("client_ready", self, "_on_ready")
 	
 	client.register_application_command_executor("docs", DocsCommandExecutor.new())
