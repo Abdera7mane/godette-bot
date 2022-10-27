@@ -24,6 +24,8 @@ const ICONS_URL: String = ASSETS_URL + "/godot/icons/3_x/tr:w-%d,h-%d,cm-pad_res
 
 const ICON_URL: String = ICONS_URL + "/{name}.png"
 
+const ITEMS_PER_PAGE: int = 5
+
 var godot_3: GodotAPIReference
 var godot_4: GodotAPIReference
 
@@ -161,12 +163,10 @@ func display_methods_documentation(
 		var methods: Array = class_reference.methods.values()
 		
 		var description: String = "`%s` class methods\n" % clazz_name
-		var pages: int = total_methods / 5
-		page = int(clamp(page, 0, pages))
-		var offset: int = 5 * page
 		var row := MessageActionRowBuilder.new()
-		for i in range(min(total_methods, min(5, total_methods - offset))):
-			var method: MethodAPIReference = methods[i + offset]
+		page = _normalize_page(page, total_methods)
+		for i in _get_page_range(page, total_methods):
+			var method: MethodAPIReference = methods[i]
 			# Arduino is the closest to highlight most of the method syntax
 			description += str('```ino\n', method, '```')
 			row.add_component(
@@ -184,11 +184,11 @@ func display_methods_documentation(
 			).add_component(
 				MessageButtonBuilder.new(MessageButton.Styles.SECONDARY)\
 				.with_custom_id("previous").with_label("Previous")\
-				.disabled(page == 0)
+				.disabled(page <= 1)
 			).add_component(
 				MessageButtonBuilder.new(MessageButton.Styles.SECONDARY)\
 				.with_custom_id("next").with_label("Next")\
-				.disabled(page == pages)
+				.disabled(page == _get_total_pages(total_methods))
 			)
 		).add_component(row)
 		return page
@@ -231,12 +231,10 @@ func display_properties_documentation(
 	else:
 		var members: Array = class_reference.members.values()
 		var description: String = "`%s` class properties\n" % clazz_name
-		var pages: int = total_members / 5
-		page = int(clamp(page, 0, pages))
-		var offset: int = 5 * page
 		var row := MessageActionRowBuilder.new()
-		for i in range(min(total_members, min(5, total_members - offset))):
-			var member: MemberAPIReference = members[i + offset]
+		page = _normalize_page(page, total_members)
+		for i in _get_page_range(page, total_members):
+			var member: MemberAPIReference = members[i]
 			description += str('```ino\n', member, '```')
 			row.add_component(
 				MessageButtonBuilder.new(MessageButton.Styles.SECONDARY)\
@@ -254,11 +252,11 @@ func display_properties_documentation(
 			).add_component(
 				MessageButtonBuilder.new(MessageButton.Styles.SECONDARY)\
 				.with_custom_id("previous").with_label("Previous")\
-				.disabled(page == 0)
+				.disabled(page <= 1)
 			).add_component(
 				MessageButtonBuilder.new(MessageButton.Styles.SECONDARY)\
 				.with_custom_id("next").with_label("Next")\
-				.disabled(page == pages)
+				.disabled(page == _get_total_pages(total_members))
 			)
 		).add_component(row)
 		return page
@@ -301,12 +299,10 @@ func display_signals_documentation(
 	else:
 		var signals: Array = class_reference.signals.values()
 		var description: String = "`%s` class signals\n" % clazz_name
-		var pages: int = total_signals / 5
-		page = int(clamp(page, 0, pages))
-		var offset: int = 5 * page
 		var row := MessageActionRowBuilder.new()
-		for i in range(min(total_signals, min(5, total_signals - offset))):
-			var signal_ref: SignalAPIReference = signals[i + offset]
+		page = _normalize_page(page, total_signals)
+		for i in _get_page_range(page, total_signals):
+			var signal_ref: SignalAPIReference = signals[i]
 			# Yeah whatever, haskell time
 			description += str('```hs\n', signal_ref, '```')
 			row.add_component(
@@ -325,12 +321,12 @@ func display_signals_documentation(
 			).add_component(
 				MessageButtonBuilder.new(MessageButton.Styles.SECONDARY)\
 				.with_custom_id("previous").with_label("Previous")\
-				.disabled(page == 0)
+				.disabled(page <= 1)
 			).add_component(
 				MessageButtonBuilder.new(MessageButton.Styles.SECONDARY)\
 				.with_custom_id("next")\
 				.with_label("Next")\
-				.disabled(page == pages)
+				.disabled(page == _get_total_pages(total_signals))
 			)
 		).add_component(row)
 		return page
@@ -374,12 +370,10 @@ func display_constants_documentation(
 	else:
 		var constants: Array = class_reference.constants.values()
 		var description: String = "`%s` class constants\n" % clazz_name
-		var pages: int = total_constants / 5
-		page = int(clamp(page, 0, pages))
-		var offset: int = 5 * page
 		var row := MessageActionRowBuilder.new()
-		for i in range(min(total_constants, min(5, total_constants - offset))):
-			var constant: ConstantAPIReference = constants[i + offset]
+		page = _normalize_page(page, total_constants)
+		for i in _get_page_range(page, total_constants):
+			var constant: ConstantAPIReference = constants[i]
 			description += str('```ino\n', constant, '```')
 			row.add_component(
 				MessageButtonBuilder.new(MessageButton.Styles.SECONDARY)\
@@ -397,11 +391,11 @@ func display_constants_documentation(
 			).add_component(
 				MessageButtonBuilder.new(MessageButton.Styles.SECONDARY)\
 				.with_custom_id("previous").with_label("Previous")\
-				.disabled(page == 0)
+				.disabled(page <= 1)
 			).add_component(
 				MessageButtonBuilder.new(MessageButton.Styles.SECONDARY)\
 				.with_custom_id("next").with_label("Next")\
-				.disabled(page == pages)
+				.disabled(page == _get_total_pages(total_constants))
 			)
 		).add_component(row)
 		return page
@@ -445,12 +439,10 @@ func display_enums_documentation(
 	else:
 		var enums: Array = class_reference.enums.values()
 		var description: String = "`%s` class enums\n" % clazz_name
-		var pages: int = total_enums / 5
-		page = int(clamp(page, 0, pages))
-		var offset: int = 5 * page
 		var row := MessageActionRowBuilder.new()
-		for i in range(min(total_enums, min(5, total_enums - offset))):
-			var enum_ref: EnumAPIReference = enums[i + offset]
+		page = _normalize_page(page, total_enums)
+		for i in _get_page_range(page, total_enums):
+			var enum_ref: EnumAPIReference = enums[i]
 			description += str('```swift\n', enum_ref.name, '```')
 			row.add_component(
 				MessageButtonBuilder.new(MessageButton.Styles.SECONDARY)\
@@ -468,11 +460,11 @@ func display_enums_documentation(
 			).add_component(
 				MessageButtonBuilder.new(MessageButton.Styles.SECONDARY)\
 				.with_custom_id("previous").with_label("Previous")\
-				.disabled(page == 0)
+				.disabled(page <= 1)
 			).add_component(
 				MessageButtonBuilder.new(MessageButton.Styles.SECONDARY)\
 				.with_custom_id("next").with_label("Next")\
-				.disabled(page == pages)
+				.disabled(page == _get_total_pages(total_enums))
 			)
 		).add_component(row)
 		return page
@@ -543,9 +535,20 @@ func display_attribute(
 				display_enum_documentation(clazz, attribute_name, api_reference, action)
 		_:
 			display_class_documentation(clazz, api_reference, action)
-		
-	yield(action.submit(), "completed")
+	
 	return page
+
+func _get_total_pages(total_items: int) -> int:
+	return int(ceil(float(total_items) / ITEMS_PER_PAGE))
+
+func _get_page_range(page: int, total_items: int) -> Array:
+	var start: int = (page - 1) * ITEMS_PER_PAGE
+	var end: int = int(min(start + ITEMS_PER_PAGE, total_items))
+	return range(start, end)
+
+func _normalize_page(page: int, total_items: int) -> int:
+	var pages: int = _get_total_pages(total_items)
+	return int(clamp(page, 1, pages))
 
 func _on_slash_command(command: DiscordSlashCommand) -> void:
 	var clazz: String = command.get_string_option("class_name")
@@ -553,37 +556,58 @@ func _on_slash_command(command: DiscordSlashCommand) -> void:
 	var attribute_name: String = command.get_string_option("attribute_name")
 	var page: int = command.get_integer_option("page")
 	var for_godot_4: bool = command.get_boolean_option("godot_4")
+	var author_id: int = command.user_id
 	
 #	var api_reference: GodotAPIReference = godot_4 if for_godot_4 else godot_3
 	var api_reference: GodotAPIReference = godot_3
 	
-	var action: MessageAction = command.create_reply()
+	var class_exist: bool = api_reference.has_class(clazz)
 	
-	if attribute.empty() and not attribute_name.empty():
-		action.set_content(
-			"**`attribute` option must be set when `attribute_name` is provided**"
-		)
+	if not yield(command.defer_reply(not class_exist), "completed"):
+		return
 	
-	elif api_reference.has_class(clazz):
-		yield(display_attribute(
+	var action: MessageAction = command.create_followup()
+	
+	if class_exist:
+		display_attribute(
 			api_reference, clazz, attribute,
 			attribute_name, page, action
-		), "completed")
+		)
+	
 	else:
-		action.set_content("**Class name `%s` not found**" % clazz)\
-			.ephemeral(true).submit()
+		yield(
+			action.set_content("**Class name `%s` not found**" % clazz)\
+			.submit()
+		, "completed")
+		return
 	
+	if attribute.empty() and not attribute_name.empty():
+		yield(
+			action.set_content(
+			"**`attribute` option must be set when `attribute_name` is provided**"
+			).submit()
+		, "completed")
+		return
 	
-	var response: Message = yield(command.fetch_response(), "completed")
+	var response: Message = yield(action.submit(), "completed")
 	if not response:
 		return
-
-	var awaiter := await_components(response.id, 30_000)
+	
+	var awaiter := await_components(response.id, 20_000)
+	
+	action = command.edit_followup()
 	
 	var previous: String
 	while yield(awaiter.wait(), "completed"):
 		awaiter.reset()
 		var event := awaiter.get_event()
+		
+		if event.user_id != author_id:
+			yield(event.create_reply(
+				"**You are not the author of this command**"
+			).ephemeral(true).submit(), "completed")
+			continue
+		
 		var custom_id: String = event.data.custom_id
 		action = event.update_message()
 		match custom_id:
@@ -603,9 +627,12 @@ func _on_slash_command(command: DiscordSlashCommand) -> void:
 			_:
 				attribute_name = custom_id
 		
-		page = yield(display_attribute(
+		page = display_attribute(
 			api_reference, clazz, attribute,
 			attribute_name, page, action
-		), "completed")
+		)
+		
+		yield(action.submit(), "completed")
+		action = event.message.edit()
 	
-	command.edit_response().clear_components().submit()
+	yield(action.clear_components().submit(), "completed")
